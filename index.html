@@ -933,7 +933,7 @@ function setLang(l){
     else v=el.getAttribute('data-zh');
     if(v!==null)el.textContent=v;
   });
-  renderHome();renderBrowse();renderForum();renderDiscussion();
+  renderHome();renderBrowse();renderForum();renderDiscussion();renderActivity();
 }
 
 // NAV
@@ -1100,7 +1100,7 @@ function renderAdminActivities(){
     <td><span style="display:inline-block;padding:2px 8px;border-radius:2px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-family:'Source Serif 4',serif;background:${(a.active||'').toLowerCase()==='true'?'var(--forest-light)':'var(--paper3)'};color:${(a.active||'').toLowerCase()==='true'?'var(--forest)':'var(--ink3)'}">${(a.active||'').toLowerCase()==='true'?'Active':'Hidden'}</span></td>
     <td><strong>${escHtml(a.title_en||'—')}</strong></td>
     <td>${escHtml(a.title_zh||'—')}</td>
-    <td style="font-size:12px;color:var(--red)">${escHtml(a.deadline||'—')}</td>
+    <td style="font-size:12px;color:var(--red)">${escHtml(formatDeadline(a.deadline)||'—')}</td>
     <td style="font-size:12px;color:var(--gold)">${escHtml(a.reward||'—')}</td>
   </tr>`).join('')}
   </tbody></table></div>
@@ -1148,7 +1148,13 @@ function renderDiscussion(){
   }).join('');
 }
 
-// TRACK SELECTOR
+function formatDeadline(d){
+  if(!d)return'';
+  // Handle Google Sheets Date(yyyy,m,d) format (month is 0-indexed)
+  const m=d.match(/Date\((\d+),(\d+),(\d+)\)/);
+  if(m)return`${m[1]}-${String(parseInt(m[2])+1).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+  return d;
+}
 function selectTrack(t){
   currentTrack=t;
   document.getElementById('track-pro').classList.toggle('selected',t==='professional');
@@ -1633,7 +1639,7 @@ function renderActivity(){
       <div class="activity-header-bar">
         <div class="activity-title-el">${escHtml(title||'Untitled Activity')}</div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:5px">
-          ${a.deadline?`<span style="font-size:12px;color:var(--red);font-family:'Source Serif 4',serif">\ud83d\udcc5 ${t('Deadline','\u622a\u6b62')}: ${a.deadline}</span>`:''}
+          ${a.deadline?`<span style="font-size:12px;color:var(--red);font-family:'Source Serif 4',serif">\ud83d\udcc5 ${t('Deadline','\u622a\u6b62')}: ${formatDeadline(a.deadline)}</span>`:''}
           ${a.reward?`<span style="font-size:12px;color:var(--gold);font-family:'Source Serif 4',serif">\u2605 ${t('Reward','\u5956\u52b1')}: ${escHtml(a.reward)}</span>`:''}
         </div>
       </div>
