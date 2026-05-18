@@ -730,6 +730,7 @@ body{font-family:'EB Garamond','Source Serif 4','Noto Serif SC',Georgia,serif;ba
     <button class="admin-tab active" onclick="switchAdminTab('overview')" data-tab="overview">Overview 总览</button>
     <button class="admin-tab" onclick="switchAdminTab('submissions')" data-tab="submissions">Submissions 投稿</button>
     <button class="admin-tab" onclick="switchAdminTab('videos')" data-tab="videos">Videos 视频管理</button>
+    <button class="admin-tab" onclick="switchAdminTab('activities')" data-tab="activities">Activities 活动管理</button>
     <button class="admin-tab" onclick="switchAdminTab('essays')" data-tab="essays">Published 已发表</button>
   </div>
   <div class="admin-body">
@@ -838,6 +839,42 @@ body{font-family:'EB Garamond','Source Serif 4','Noto Serif SC',Georgia,serif;ba
       </div>
     </div>
 
+
+    <!-- Activities Tab -->
+    <div id="admin-tab-activities" style="display:none">
+      <div style="background:var(--red-light);border:0.5px solid var(--red);border-radius:3px;padding:14px 20px;margin-bottom:20px;font-size:13px;color:var(--ink2)">
+        Activities are managed in your <a href="https://docs.google.com/spreadsheets/d/1DK-7EE91mg92ohMKGS4SUG97NwaJL2-YGjidPjiT0wc/edit" target="_blank" style="color:var(--forest)">Google Sheet &rarr; activities tab</a>. Use the form below to generate a row you can paste in.
+      </div>
+      <div class="admin-video-form" style="border-left:3px solid var(--red)">
+        <h4>Generate Activity Row &middot; 生成活动行</h4>
+        <p style="font-size:13px;color:var(--ink3);margin-bottom:16px;font-style:italic">Fill in the fields, then click Copy to get a tab-separated row ready to paste into your Sheet.</p>
+        <div class="admin-video-grid">
+          <div class="form-group" style="margin:0"><label class="form-label">Activity ID (unique)</label><input class="form-input" type="text" id="act-id" placeholder="may-2026-writing"></div>
+          <div class="form-group" style="margin:0"><label class="form-label">Active? &nbsp;Active=shows publicly</label><select class="form-select" id="act-active"><option value="true">true &mdash; show publicly</option><option value="false">false &mdash; hidden</option></select></div>
+          <div class="form-group" style="margin:0"><label class="form-label">Title (English)</label><input class="form-input" type="text" id="act-title-en" placeholder="May Writing Challenge"></div>
+          <div class="form-group" style="margin:0"><label class="form-label">&#26631;&#39064;&#65288;&#20013;&#25991;&#65289;</label><input class="form-input" type="text" id="act-title-zh" placeholder="&#20116;&#26376;&#20889;&#20316;&#25377;&#25112;"></div>
+          <div class="form-group" style="margin:0"><label class="form-label">Description (English)</label><input class="form-input" type="text" id="act-desc-en" placeholder="Write a 300-word essay on..."></div>
+          <div class="form-group" style="margin:0"><label class="form-label">&#25551;&#36848;&#65288;&#20013;&#25991;&#65289;</label><input class="form-input" type="text" id="act-desc-zh" placeholder="&#20889;&#19968;&#31295;300&#23383;&#20851;&#20110;&#8230;&#30340;&#25991;&#31456;"></div>
+          <div class="form-group" style="margin:0"><label class="form-label">Deadline &#25130;&#27490;&#26085;&#26399;</label><input class="form-input" type="text" id="act-deadline" placeholder="2026-06-30"></div>
+          <div class="form-group" style="margin:0"><label class="form-label">Reward &#22870;&#21161;</label><input class="form-input" type="text" id="act-reward" placeholder="Featured on homepage"></div>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button class="submit-btn" style="background:var(--red)" onclick="copyActivityRow()">&#128203; Copy Row for Sheet</button>
+          <span style="font-size:12px;color:var(--ink3);font-style:italic">Paste into activities tab. Column order: id, active, title_en, title_zh, desc_en, desc_zh, deadline, reward</span>
+        </div>
+        <div id="act-copy-msg" style="margin-top:10px;font-size:13px;min-height:18px;font-family:'Source Serif 4',serif;color:var(--forest)"></div>
+      </div>
+
+      <div style="margin-top:24px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px">
+          <h4 style="font-family:'Playfair Display',serif;font-size:17px;font-weight:600">Current Activities</h4>
+          <span style="font-size:11px;color:var(--ink3);font-family:'Source Serif 4',serif" id="act-count-label">&#8212;</span>
+        </div>
+        <div id="admin-act-list"></div>
+        <div id="admin-act-empty" style="display:none;text-align:center;padding:30px;color:var(--ink4);font-style:italic;font-size:14px">No activities in sheet yet.</div>
+      </div>
+    </div>
+
     <!-- Published Essays Tab -->
     <div id="admin-tab-essays" style="display:none">
       <div style="background:var(--paper2);border:0.5px solid var(--paper4);border-radius:3px;padding:14px 20px;margin-bottom:20px;font-size:13px;color:var(--ink2)">
@@ -938,12 +975,13 @@ function logoutAdmin(){isAdmin=false;showSection('home');}
 
 // ADMIN TABS
 function switchAdminTab(tab){
-  ['overview','submissions','videos','essays'].forEach(t=>{
+  ['overview','submissions','videos','activities','essays'].forEach(t=>{
     document.getElementById('admin-tab-'+t).style.display=t===tab?'':'none';
   });
   document.querySelectorAll('.admin-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
   if(tab==='essays')loadAdminEssays();
   if(tab==='videos')renderAdminVideos();
+  if(tab==='activities')renderAdminActivities();
 }
 function refreshAdminStats(){
   document.getElementById('stat-essays').textContent=allEssays.length||'0';
@@ -1024,6 +1062,51 @@ function renderAdminVideos(){
       </div>
       <button class="video-list-remove" onclick="removeVideo(${v.id})">✕</button>
     </div>`).join('');
+}
+
+// ACTIVITIES ADMIN
+function copyActivityRow(){
+  const id=document.getElementById('act-id').value.trim()||('act-'+Date.now());
+  const active=document.getElementById('act-active').value;
+  const titleEn=document.getElementById('act-title-en').value.trim();
+  const titleZh=document.getElementById('act-title-zh').value.trim();
+  const descEn=document.getElementById('act-desc-en').value.trim();
+  const descZh=document.getElementById('act-desc-zh').value.trim();
+  const deadline=document.getElementById('act-deadline').value.trim();
+  const reward=document.getElementById('act-reward').value.trim();
+  const msg=document.getElementById('act-copy-msg');
+  if(!titleEn&&!titleZh){msg.style.color='var(--red)';msg.textContent='Please enter at least one title.';return;}
+  const row=[id,active,titleEn,titleZh,descEn,descZh,deadline,reward].join('\t');
+  navigator.clipboard.writeText(row).then(()=>{
+    msg.style.color='var(--forest)';
+    msg.textContent='✓ Copied! Open your Google Sheet → activities tab → click on an empty row → Ctrl+V (or Cmd+V) to paste.';
+  }).catch(()=>{
+    msg.style.color='var(--ink3)';
+    msg.textContent='Copy manually: '+row;
+  });
+}
+function renderAdminActivities(){
+  const list=document.getElementById('admin-act-list');
+  const empty=document.getElementById('admin-act-empty');
+  const countEl=document.getElementById('act-count-label');
+  if(!allActivities.length){list.innerHTML='';empty.style.display='block';countEl.textContent='0 activities';return;}
+  empty.style.display='none';
+  countEl.textContent=allActivities.length+' activit'+(allActivities.length===1?'y':'ies');
+  list.innerHTML=`<div style="overflow-x:auto"><table class="admin-table"><thead><tr>
+    <th>ID</th><th>Active</th><th>Title EN</th><th>Title ZH</th><th>Deadline</th><th>Reward</th>
+  </tr></thead><tbody>
+  ${allActivities.map(a=>`<tr>
+    <td style="font-size:11px;color:var(--ink3);font-family:'Source Serif 4',serif">${escHtml(a.id||'—')}</td>
+    <td><span style="display:inline-block;padding:2px 8px;border-radius:2px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-family:'Source Serif 4',serif;background:${(a.active||'').toLowerCase()==='true'?'var(--forest-light)':'var(--paper3)'};color:${(a.active||'').toLowerCase()==='true'?'var(--forest)':'var(--ink3)'}">${(a.active||'').toLowerCase()==='true'?'Active':'Hidden'}</span></td>
+    <td><strong>${escHtml(a.title_en||'—')}</strong></td>
+    <td>${escHtml(a.title_zh||'—')}</td>
+    <td style="font-size:12px;color:var(--red)">${escHtml(a.deadline||'—')}</td>
+    <td style="font-size:12px;color:var(--gold)">${escHtml(a.reward||'—')}</td>
+  </tr>`).join('')}
+  </tbody></table></div>
+  <div style="margin-top:12px;padding:12px 16px;background:var(--paper2);border-radius:3px;font-size:12px;color:var(--ink3);border:0.5px solid var(--paper4)">
+    To edit or delete an activity, go to <a href="https://docs.google.com/spreadsheets/d/1DK-7EE91mg92ohMKGS4SUG97NwaJL2-YGjidPjiT0wc/edit" target="_blank" style="color:var(--forest)">Google Sheet → activities tab</a> and edit the row directly. Set <code style="background:var(--paper3);padding:1px 4px;border-radius:2px">active=false</code> to hide without deleting.
+  </div>`;
 }
 
 // DISCUSSION
@@ -1113,14 +1196,17 @@ async function fetchAll(){
     if(r5){
       try{
         const videosRaw=parseSheet(await r5.text());
-        allVideos=videosRaw.map(v=>({
-          id:v.id||v.embed_url||v.title_en,
-          type:v.type||(v.embed_url&&v.embed_url.includes('bilibili')?'bilibili':v.embed_url&&v.embed_url.includes('youtube')?'youtube':'pdf'),
-          embedUrl:v.embed_url||v.embedUrl||'',
-          linkUrl:v.link_url||v.linkUrl||v.embed_url||'',
-          title_en:v.title_en||'',title_zh:v.title_zh||'',
-          host:v.host||v.editor||'',tag:v.tag||'Resource'
-        }));
+        // Only accept rows that have a URL (embed_url or link_url) — prevents essay rows leaking in
+        allVideos=videosRaw
+          .filter(v=>(v.embed_url||'').trim()||(v.link_url||'').trim())
+          .map(v=>({
+            id:v.id||v.embed_url||v.title_en,
+            type:v.type||(v.embed_url&&v.embed_url.includes('bilibili')?'bilibili':v.embed_url&&v.embed_url.includes('youtube')?'youtube':'pdf'),
+            embedUrl:v.embed_url||'',
+            linkUrl:v.link_url||v.embed_url||'',
+            title_en:v.title_en||'',title_zh:v.title_zh||'',
+            host:v.host||v.editor||'',tag:v.tag||'Resource'
+          }));
       }catch{allVideos=[];}
     }
   }catch{allEssays=[];allTopics=[];allActivities=[];allLikes={};}
