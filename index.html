@@ -860,7 +860,7 @@ body{font-family:'EB Garamond','Source Serif 4','Noto Serif SC',Georgia,serif;ba
         </div>
         <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
           <button class="submit-btn" style="background:var(--red)" onclick="copyActivityRow()">&#128203; Copy Row for Sheet</button>
-          <span style="font-size:12px;color:var(--ink3);font-style:italic">Paste into activities tab. Column order: id, active, title_en, title_zh, desc_en, desc_zh, deadline, reward</span>
+          <span style="font-size:12px;color:var(--ink3);font-style:italic">Paste into activities tab. Column order: id, title_en, title_zh, desc_en, desc_zh, deadline, reward, active</span>
         </div>
         <div id="act-copy-msg" style="margin-top:10px;font-size:13px;min-height:18px;font-family:'Source Serif 4',serif;color:var(--forest)"></div>
       </div>
@@ -1076,7 +1076,7 @@ function copyActivityRow(){
   const reward=document.getElementById('act-reward').value.trim();
   const msg=document.getElementById('act-copy-msg');
   if(!titleEn&&!titleZh){msg.style.color='var(--red)';msg.textContent='Please enter at least one title.';return;}
-  const row=[id,active,titleEn,titleZh,descEn,descZh,deadline,reward].join('\t');
+  const row=[id,titleEn,titleZh,descEn,descZh,deadline,reward,active].join('\t');
   navigator.clipboard.writeText(row).then(()=>{
     msg.style.color='var(--forest)';
     msg.textContent='✓ Copied! Open your Google Sheet → activities tab → click on an empty row → Ctrl+V (or Cmd+V) to paste.';
