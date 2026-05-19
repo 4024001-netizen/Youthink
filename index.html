@@ -198,6 +198,20 @@ body{font-family:'EB Garamond','Source Serif 4','Noto Serif SC',Georgia,serif;ba
   #font-size-label, #font-dec-btn, #font-inc-btn { display:inline-flex !important; }
 }
 
+/* NOTICE BOARD */
+.notice-board{background:linear-gradient(135deg,#fffbf0 0%,#fff8e8 100%);border:0.5px solid var(--gold2);border-left:4px solid var(--gold2);border-radius:0 3px 3px 0;padding:16px 22px;margin-bottom:28px;position:relative}
+.notice-board-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.notice-board-title{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-family:'Source Serif 4',serif;display:flex;align-items:center;gap:7px}
+.notice-board-title::before{content:'📌';font-size:13px}
+.notice-board-empty{font-size:13px;color:var(--ink4);font-style:italic}
+.notice-item{border-top:0.5px solid rgba(154,111,32,.15);padding:10px 0;display:flex;gap:12px;align-items:flex-start}
+.notice-item:first-child{border-top:none;padding-top:0}
+.notice-item:last-child{padding-bottom:0}
+.notice-dot{width:6px;height:6px;border-radius:50%;background:var(--gold2);flex-shrink:0;margin-top:7px}
+.notice-content{flex:1}
+.notice-text{font-size:14px;color:var(--ink);line-height:1.7;margin-bottom:3px}
+.notice-date{font-size:11px;color:var(--ink4);font-family:'Source Serif 4',serif;letter-spacing:.04em}
+.notice-loading{font-size:13px;color:var(--ink4);font-style:italic;padding:6px 0}
 .footer{border-top:2px solid var(--ink);padding:18px 40px;display:flex;align-items:center;justify-content:space-between;font-size:10px;color:var(--ink4);letter-spacing:.1em;margin-top:40px;font-family:'Source Serif 4',serif}
 .footer-admin-trigger{background:none;border:none;color:transparent;cursor:default;font-size:14px;padding:4px 8px;border-radius:1px;transition:all .4s;user-select:none}
 .footer-admin-trigger:hover{color:var(--ink4)}
@@ -322,6 +336,14 @@ body{font-family:'EB Garamond','Source Serif 4','Noto Serif SC',Georgia,serif;ba
 
 <!-- HOME -->
 <div class="section active" id="section-home">
+  <!-- NOTICE BOARD -->
+  <div class="notice-board" id="notice-board">
+    <div class="notice-board-header">
+      <div class="notice-board-title" data-en="Notice Board" data-zh="告示栏">Notice Board</div>
+      <div style="font-size:11px;color:var(--ink4);font-family:'Source Serif 4',serif" id="notice-updated"></div>
+    </div>
+    <div id="notice-list"><div class="notice-loading" data-en="Loading notices…" data-zh="加载中…">Loading notices…</div></div>
+  </div>
   <div id="home-award" class="award-banner hidden">
     <span><span class="award-star">★</span><span data-en="Essay of the Month" data-zh="本月最佳">Essay of the Month</span></span>
     <span id="home-award-title" style="font-style:italic;opacity:.75"></span>
@@ -431,6 +453,8 @@ body{font-family:'EB Garamond','Source Serif 4','Noto Serif SC',Georgia,serif;ba
     <div class="section-title" data-en="Submit Your Essay" data-zh="投稿">Submit Your Essay</div>
     <div class="section-label" data-en="Open to Grades 7–12" data-zh="面向7至12年级">Open to Grades 7–12</div>
   </div>
+  <!-- Fallback notice -->
+  <div class="html-translate" style="background:var(--forest-light);border-left:4px solid var(--forest);border-radius:0 3px 3px 0;padding:13px 18px;margin-bottom:24px;font-size:14px;color:var(--forest2);line-height:1.75" data-en="If the submission system is unavailable, please send your work to: <a href='mailto:4024001@student.isf.edu.hk' style='color:var(--forest);font-weight:600'>4024001@student.isf.edu.hk</a>. You may also submit a PDF version." data-zh="如果投稿系统不能使用，请将作品发至电邮：<a href='mailto:4024001@student.isf.edu.hk' style='color:var(--forest);font-weight:600'>4024001@student.isf.edu.hk</a>。您也可以投稿PDF版本。">If the submission system is unavailable, please send your work to: <a href="mailto:4024001@student.isf.edu.hk" style="color:var(--forest);font-weight:600">4024001@student.isf.edu.hk</a>. You may also submit a PDF version.</div>
   <div style="margin-bottom:24px">
     <div class="form-label" data-en="Choose Your Track" data-zh="选择投稿路径">Choose Your Track</div>
     <div class="track-selector">
@@ -904,6 +928,7 @@ const SHEET_ID   = '1DK-7EE91mg92ohMKGS4SUG97NwaJL2-YGjidPjiT0wc';
 const ESSAYS_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=essays`;
 const FORUM_URL  = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=forum`;
 const VIDEOS_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=videos`;
+const NOTICES_URL= `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=notices`;
 const ADMIN_PASSWORD   = 'youthink2025'; // change this!
 
 let lang='en', allEssays=[], allTopics=[], allVideos=[];
@@ -933,7 +958,15 @@ function setLang(l){
     else v=el.getAttribute('data-zh');
     if(v!==null)el.textContent=v;
   });
-  renderHome();renderBrowse();renderForum();renderDiscussion();renderActivity();
+  // Elements that contain HTML (links etc.) — use innerHTML
+  document.querySelectorAll('.html-translate').forEach(el=>{
+    let v;
+    if(l==='en') v=el.getAttribute('data-en');
+    else if(l==='zhTW'){const zh=el.getAttribute('data-zh');v=zh?toTraditional(zh):el.getAttribute('data-en');}
+    else v=el.getAttribute('data-zh');
+    if(v!==null)el.innerHTML=v;
+  });
+  renderHome();renderBrowse();renderForum();renderDiscussion();renderActivity();fetchNotices();
 }
 
 // NAV
@@ -1183,7 +1216,44 @@ function parseSheet(text){
 }
 
 // FETCH
+// NOTICE BOARD
+async function fetchNotices(){
+  const list=document.getElementById('notice-list');
+  const upd=document.getElementById('notice-updated');
+  try{
+    const r=await fetch(NOTICES_URL);
+    const raw=await r.text();
+    const notices=parseSheet(raw).filter(n=>{
+      const active=(n.active||n.Active||'').toString().toLowerCase();
+      return active===''||active==='true'||active==='yes'||active==='1';
+    });
+    if(!notices.length){
+      list.innerHTML=`<div class="notice-board-empty" data-en="No notices at this time." data-zh="暂无告示。">${t('No notices at this time.','暂无告示。')}</div>`;
+      return;
+    }
+    list.innerHTML=notices.map(n=>{
+      const text=lang==='zh'?(n.text_zh||n.text_en||n.text||n.message||''):(n.text_en||n.text||n.message||n.text_zh||'');
+      const date=n.date||n.Date||'';
+      const type=n.type||n.Type||'';
+      const dotColor=type.toLowerCase().includes('urgent')?'var(--red)':type.toLowerCase().includes('new')?'var(--forest)':'var(--gold2)';
+      return`<div class="notice-item">
+        <div class="notice-dot" style="background:${dotColor}"></div>
+        <div class="notice-content">
+          <div class="notice-text">${escHtml(text)}</div>
+          ${date?`<div class="notice-date">${escHtml(date)}</div>`:''}
+        </div>
+      </div>`;
+    }).join('');
+    const lastDate=notices[0]?.date||notices[0]?.Date||'';
+    if(lastDate)upd.textContent=t('Updated: ','更新：')+lastDate;
+  }catch{
+    list.innerHTML=`<div class="notice-board-empty">${t('Could not load notices.','无法载入告示。')}</div>`;
+  }
+}
+
 async function fetchAll(){
+  // Fetch notices independently (non-blocking)
+  fetchNotices();
   try{
     const [r1,r2,r3,r4,r5]=await Promise.all([
       fetch(ESSAYS_URL),fetch(FORUM_URL),
